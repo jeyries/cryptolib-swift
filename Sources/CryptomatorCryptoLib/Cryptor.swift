@@ -10,7 +10,7 @@ import Base32
 import CommonCrypto
 import Foundation
 
-public extension Data {
+extension Data {
 	init?(base64UrlEncoded base64String: String, options: Data.Base64DecodingOptions = []) {
 		self.init(base64Encoded: base64String.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/"), options: options)
 	}
@@ -20,17 +20,17 @@ public extension Data {
 	}
 }
 
-public extension FixedWidthInteger {
+extension FixedWidthInteger {
 	func byteArray() -> [UInt8] {
 		return withUnsafeBytes(of: self, { [UInt8]($0) })
 	}
 }
 
-public enum InputStreamError: Error {
+enum InputStreamError: Error {
 	case readOperationFailed
 }
 
-public extension InputStream {
+extension InputStream {
 	func read(maxLength: Int) throws -> [UInt8]? {
 		var buffer = [UInt8](repeating: 0x00, count: maxLength)
 		let length = read(&buffer, maxLength: maxLength)
@@ -66,8 +66,8 @@ public class Cryptor {
 		return contentCryptor.nonceLen + fileHeaderPayloadSize + contentCryptor.tagLen
 	}
 
-	private let cleartextChunkSize = 32 * 1024
-	private var ciphertextChunkSize: Int {
+	internal let cleartextChunkSize = 32 * 1024
+	internal var ciphertextChunkSize: Int {
 		return contentCryptor.nonceLen + cleartextChunkSize + contentCryptor.tagLen
 	}
 
@@ -206,7 +206,7 @@ public class Cryptor {
 		try encryptContent(from: cleartextStream, to: ciphertextStream, cleartextSize: cleartextSize)
 	}
 
-	func encryptContent(from cleartextStream: InputStream, to ciphertextStream: OutputStream, cleartextSize: Int?) throws {
+	public func encryptContent(from cleartextStream: InputStream, to ciphertextStream: OutputStream, cleartextSize: Int?) throws {
 		// create progress:
 		let progress: Progress
 		if let cleartextSize = cleartextSize {
@@ -269,7 +269,7 @@ public class Cryptor {
 		try decryptContent(from: ciphertextStream, to: cleartextStream, ciphertextSize: ciphertextSize)
 	}
 
-	func decryptContent(from ciphertextStream: InputStream, to cleartextStream: OutputStream, ciphertextSize: Int?) throws {
+	public func decryptContent(from ciphertextStream: InputStream, to cleartextStream: OutputStream, ciphertextSize: Int?) throws {
 		// create progress:
 		let progress: Progress
 		if let ciphertextSize = ciphertextSize, let cleartextSize = try? calculateCleartextSize(ciphertextSize - fileHeaderSize) {

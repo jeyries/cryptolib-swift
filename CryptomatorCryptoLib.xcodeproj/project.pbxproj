@@ -34,6 +34,8 @@
 		9E9BB81624558DFF00F9FF51 /* MasterkeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E9BB81524558DFF00F9FF51 /* MasterkeyTests.swift */; };
 		9EB822C1248AF82200879838 /* AesCtr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB822C0248AF82200879838 /* AesCtr.swift */; };
 		9EB822C3248AF9C500879838 /* AesCtrTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB822C2248AF9C500879838 /* AesCtrTests.swift */; };
+		F92575B928912A59007089A4 /* StreamTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = F92575B828912A59007089A4 /* StreamTools.swift */; };
+		F938A073289074DD001C19AC /* CryptoStreams.swift in Sources */ = {isa = PBXBuildFile; fileRef = F938A072289074DD001C19AC /* CryptoStreams.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,6 +99,8 @@
 		9E9BB81524558DFF00F9FF51 /* MasterkeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasterkeyTests.swift; sourceTree = "<group>"; };
 		9EB822C0248AF82200879838 /* AesCtr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AesCtr.swift; sourceTree = "<group>"; };
 		9EB822C2248AF9C500879838 /* AesCtrTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AesCtrTests.swift; sourceTree = "<group>"; };
+		F92575B828912A59007089A4 /* StreamTools.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StreamTools.swift; sourceTree = "<group>"; };
+		F938A072289074DD001C19AC /* CryptoStreams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoStreams.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -160,6 +164,8 @@
 				74F0F7592490C1EB00B4C26D /* CryptoSupport.swift */,
 				9E9BB8132454708600F9FF51 /* Masterkey.swift */,
 				74B4D38C2588CD60006C0567 /* MasterkeyFile.swift */,
+				F938A072289074DD001C19AC /* CryptoStreams.swift */,
+				F92575B828912A59007089A4 /* StreamTools.swift */,
 			);
 			path = CryptomatorCryptoLib;
 			sourceTree = "<group>";
@@ -431,7 +437,9 @@
 				74F0F75A2490C1EB00B4C26D /* CryptoSupport.swift in Sources */,
 				9E9BB8142454708600F9FF51 /* Masterkey.swift in Sources */,
 				9E44EEA624599C6900A37B01 /* AesSiv.swift in Sources */,
+				F92575B928912A59007089A4 /* StreamTools.swift in Sources */,
 				9E97DC8D25F77BA40046C83E /* ContentCryptor.swift in Sources */,
+				F938A073289074DD001C19AC /* CryptoStreams.swift in Sources */,
 				74F0F754248FC89B00B4C26D /* CryptoError.swift in Sources */,
 				74B4D38D2588CD60006C0567 /* MasterkeyFile.swift in Sources */,
 			);
