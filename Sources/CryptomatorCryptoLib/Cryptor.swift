@@ -206,7 +206,7 @@ public class Cryptor {
 		try encryptContent(from: cleartextStream, to: ciphertextStream, cleartextSize: cleartextSize)
 	}
 
-	func encryptContent(from cleartextStream: InputStream, to ciphertextStream: OutputStream, cleartextSize: Int?) throws {
+	public func encryptContent(from cleartextStream: InputStream, to ciphertextStream: OutputStream, cleartextSize: Int?) throws {
 		// create progress:
 		let progress: Progress
 		if let cleartextSize = cleartextSize {
@@ -269,7 +269,7 @@ public class Cryptor {
 		try decryptContent(from: ciphertextStream, to: cleartextStream, ciphertextSize: ciphertextSize)
 	}
 
-	func decryptContent(from ciphertextStream: InputStream, to cleartextStream: OutputStream, ciphertextSize: Int?) throws {
+	public func decryptContent(from ciphertextStream: InputStream, to cleartextStream: OutputStream, ciphertextSize: Int?) throws {
 		// create progress:
 		let progress: Progress
 		if let ciphertextSize = ciphertextSize, let cleartextSize = try? calculateCleartextSize(ciphertextSize - fileHeaderSize) {
