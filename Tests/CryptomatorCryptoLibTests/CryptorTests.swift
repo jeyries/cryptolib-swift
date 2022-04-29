@@ -96,6 +96,45 @@ class CryptorTests: XCTestCase {
 		XCTAssertEqual(cleartext, decrypted)
 	}
 
+	func testEncryptAndDecryptStream() throws {
+		let cleartext = [UInt8]("hello world".data(using: .ascii)!)
+
+		let encryptedStream = OutputStream.toMemory()
+		try StreamTools.copyStream(inputStream: InputStream(data: Data(cleartext)),
+		                           outputStream: cryptor.encryptOutputStream(wrapped: encryptedStream))
+
+		guard let encryptedData = encryptedStream.property(forKey: .dataWrittenToMemoryStreamKey) as? Data else { fatalError() }
+
+		let decryptedStream = OutputStream.toMemory()
+		try StreamTools.copyStream(inputStream: cryptor.decryptInputStream(wrapped: InputStream(data: encryptedData)),
+		                           outputStream: decryptedStream)
+
+		guard let decryptedData = decryptedStream.property(forKey: .dataWrittenToMemoryStreamKey) as? Data else { fatalError() }
+
+		let decrypted = [UInt8](decryptedData)
+		XCTAssertEqual(cleartext, decrypted)
+	}
+
+	func testEncryptAndDecryptContentStream() throws {
+		let originalData = Data(repeating: 0x0F, count: 65 * 1024)
+		let originalURL = tmpDirURL.appendingPathComponent(UUID().uuidString, isDirectory: false)
+		try originalData.write(to: originalURL)
+
+		let ciphertextURL = tmpDirURL.appendingPathComponent(UUID().uuidString, isDirectory: false)
+		let cleartextURL = tmpDirURL.appendingPathComponent(UUID().uuidString, isDirectory: false)
+
+		// encrypt content
+		try StreamTools.copyStream(inputStream: InputStream(url: originalURL)!,
+		                           outputStream: cryptor.encryptOutputStream(wrapped: OutputStream(url: ciphertextURL, append: false)!))
+
+		// decrypt content
+		try StreamTools.copyStream(inputStream: cryptor.decryptInputStream(wrapped: InputStream(url: ciphertextURL)!),
+		                           outputStream: OutputStream(url: cleartextURL, append: false)!)
+
+		let cleartextData = try Data(contentsOf: cleartextURL)
+		XCTAssertEqual(originalData, cleartextData)
+	}
+
 	func testCalculateCiphertextSize() {
 		let overheadPerChunk = contentCryptor.nonceLen + contentCryptor.tagLen
 
