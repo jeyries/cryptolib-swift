@@ -67,7 +67,7 @@ public class Cryptor {
 	}
 
 	private let cleartextChunkSize = 32 * 1024
-	private var ciphertextChunkSize: Int {
+	fileprivate var ciphertextChunkSize: Int {
 		return contentCryptor.nonceLen + cleartextChunkSize + contentCryptor.tagLen
 	}
 
@@ -347,4 +347,162 @@ public class Cryptor {
 		assert(additionalCleartextBytes >= 0)
 		return cleartextChunkSize * numFullChunks + additionalCleartextBytes
 	}
+}
+
+public class CryptorInputStream: InputStream {
+
+    private let cryptor: Cryptor
+    private let wrapped: InputStream
+    private var error: Error?
+    private var header: FileHeader!
+    private var chunkNumber: UInt64 = 0
+
+    init(cryptor: Cryptor, wrapped: InputStream) {
+        self.cryptor = cryptor
+        self.wrapped = wrapped
+        super.init()
+    }
+
+    public override var streamStatus: Stream.Status {
+        return error != nil ? .error : wrapped.streamStatus
+    }
+
+    public override var streamError: Error? {
+        return error ?? wrapped.streamError
+    }
+
+    public override var hasBytesAvailable: Bool {
+        return error != nil ? false : wrapped.hasBytesAvailable
+    }
+
+    public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) {
+        wrapped.schedule(in: aRunLoop, forMode: mode)
+    }
+
+    public override func open() {
+        wrapped.open()
+    }
+
+    public override func close() {
+        wrapped.close()
+    }
+
+    public override func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength len: Int) -> Int {
+
+        if error != nil {
+            return -1
+        }
+
+        do {
+            if header == nil {
+                guard let ciphertextHeader = try wrapped.read(maxLength: cryptor.fileHeaderSize) else {
+                    throw CryptoError.ioError
+                }
+
+                self.header = try cryptor.decryptHeader(ciphertextHeader)
+            }
+
+            guard let ciphertextChunk = try wrapped.read(maxLength: cryptor.ciphertextChunkSize) else {
+                return 0
+            }
+
+            let cleartextChunk = try cryptor.decryptSingleChunk(ciphertextChunk, chunkNumber: chunkNumber, headerNonce: header.nonce, fileKey: header.contentKey)
+
+            chunkNumber += 1
+
+            precondition(cleartextChunk.count <= len)
+            for i in 0 ..< cleartextChunk.count {
+                buffer[i] = cleartextChunk[i]
+            }
+
+            return cleartextChunk.count
+
+        } catch {
+            self.error = error
+            return -1
+        }
+    }
+}
+
+public class CryptorOutputStream: OutputStream {
+
+    private let cryptor: Cryptor
+    private let wrapped: OutputStream
+    private var error: Error?
+    private var header: FileHeader!
+    private var chunkNumber: UInt64 = 0
+
+    init(cryptor: Cryptor, wrapped: OutputStream) {
+        self.cryptor = cryptor
+        self.wrapped = wrapped
+        super.init()
+    }
+
+    public override var streamStatus: Stream.Status {
+        return error != nil ? .error : wrapped.streamStatus
+    }
+
+    public override var streamError: Error? {
+        return error ?? wrapped.streamError
+    }
+
+    public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) {
+        wrapped.schedule(in: aRunLoop, forMode: mode)
+    }
+
+    public override func open() {
+        wrapped.open()
+    }
+
+    public override func close() {
+        wrapped.close()
+    }
+
+    public override func write(_ buffer: UnsafePointer<UInt8>, maxLength len: Int) -> Int {
+
+        if error != nil {
+            return -1
+        }
+
+        do {
+            if header == nil {
+                self.header = try cryptor.createHeader()
+                let ciphertextHeader = try cryptor.encryptHeader(header)
+                wrapped.write(ciphertextHeader, maxLength: ciphertextHeader.count)
+            }
+
+            let cleartextChunk = Array(UnsafeBufferPointer(start: buffer, count: len))
+
+            let ciphertextChunk = try cryptor.encryptSingleChunk(cleartextChunk, chunkNumber: chunkNumber, headerNonce: header.nonce, fileKey: header.contentKey)
+            wrapped.write(ciphertextChunk, maxLength: ciphertextChunk.count)
+
+            chunkNumber += 1
+
+            return ciphertextChunk.count
+
+        } catch {
+            self.error = error
+            return -1
+        }
+    }
+}
+
+extension Cryptor {
+    public static func copyStream(inputStream: InputStream, outputStream: OutputStream) throws {
+
+        inputStream.schedule(in: .current, forMode: .default)
+        inputStream.open()
+        defer { inputStream.close() }
+
+        outputStream.schedule(in: .current, forMode: .default)
+        outputStream.open()
+        defer { outputStream.close() }
+
+        var buffer = [UInt8](repeating: 0x00, count: 33*1024)
+
+        while inputStream.hasBytesAvailable {
+            let length = inputStream.read(&buffer, maxLength: buffer.count)
+            outputStream.write(buffer, maxLength: length)
+        }
+    }
 }

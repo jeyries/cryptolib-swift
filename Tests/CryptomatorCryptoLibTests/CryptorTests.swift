@@ -138,6 +138,25 @@ class CryptorTests: XCTestCase {
 		XCTAssertEqual(cleartext, decrypted)
 	}
 
+    func testEncryptAndDecryptStream() throws {
+        let cleartext = [UInt8]("hello world".data(using: .ascii)!)
+
+        let encryptedStream = OutputStream.toMemory()
+        try Cryptor.copyStream(inputStream: InputStream(data: Data(cleartext)),
+                               outputStream: CryptorOutputStream(cryptor: cryptor, wrapped: encryptedStream))
+
+        guard let encryptedData = encryptedStream.property(forKey: .dataWrittenToMemoryStreamKey) as? Data else { fatalError() }
+
+        let decryptedStream = OutputStream.toMemory()
+        try Cryptor.copyStream(inputStream: CryptorInputStream(cryptor: cryptor, wrapped: InputStream(data: encryptedData)),
+                               outputStream: decryptedStream)
+
+        guard let decryptedData = decryptedStream.property(forKey: .dataWrittenToMemoryStreamKey) as? Data else { fatalError() }
+
+        let decrypted = [UInt8](decryptedData)
+        XCTAssertEqual(cleartext, decrypted)
+    }
+
 	func testCalculateCiphertextSize() {
 		XCTAssertEqual(0, cryptor.calculateCiphertextSize(0))
 
